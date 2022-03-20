@@ -14,9 +14,6 @@ void ComputePoints(std::vector<SDL_Point> *points);
 SDL_Point r(SDL_Point p );
 int sq (int o);
 
-std::random_device dev;
-std::mt19937 rng(dev());
-std::uniform_int_distribution<std::mt19937::result_type> r_10(1,10); 
 
 
 
@@ -25,6 +22,10 @@ class atom {
     SDL_FPoint point {200,200};  
 	float xvel;
 	float yvel; 
+	atom()
+	{
+		
+	}
 	void Updating() 
 	{
 		
@@ -70,8 +71,6 @@ int main()
     for (int i = 0; i < 4   ; i++)
 	{
 		atom atom_obj;
-		atom_obj.xvel = float(r_10(rng) / 10);
-		atom_obj.yvel = float(r_10(rng) / 10);
 		atoms.push_back(atom_obj);
 
 	}
