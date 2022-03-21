@@ -5,12 +5,12 @@
 #include <string>
 #include <vector>
 #include <random>
+#include <stdlib.h>
 
 int WIDTH = 800;
 int HEIGHT = 600;
 
-void write (std::string file , std::string texte);
-void ComputePoints(std::vector<SDL_Point> *points);
+
 SDL_Point r(SDL_Point p );
 int sq (int o);
 
@@ -24,7 +24,8 @@ class atom {
 	float yvel; 
 	atom()
 	{
-		
+	xvel = (float(rand() % 10 + 1) / 10);
+	yvel = (float(rand() % 10 + 1) / 10);
 	}
 	void Updating() 
 	{
@@ -91,12 +92,14 @@ int main()
 			}
 		}
 		// computing
-		for (int i = 0; i < 100 ; i++)
+		for (int i = 0; i < atoms.size(); i++)
 		{
         	atoms[i].Updating();
 			atoms[i].Borders();
 		}
-        
+        // Colisions
+		
+
         // Rendering
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
