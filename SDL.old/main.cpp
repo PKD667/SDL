@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_timer.h>
 #include <cmath>
 #include <iostream>
 #include <fstream>
@@ -19,27 +20,41 @@ int sq (int o);
 
 class atom {       
   public:             
-    SDL_FPoint point {200,200};  
+    SDL_FPoint* point ;  
 	float xvel;
 	float yvel; 
 	atom()
 	{
-	xvel = (float(rand() % 10 + 1) / 10);
-	yvel = (float(rand() % 10 + 1) / 10);
+	xvel = (float(rand() % 1000 + 1) / (1000 + (float(rand() % 1000 + 1 ) / 1000))) ;
+	yvel = (float(rand() % 1000 + 1) / (1000 + (float(rand() % 1000 + 1 ) / 1000))) ;
 	}
 	void Updating() 
 	{
 		
-    	point.x += xvel;
-		point.y += yvel;
+        (*point).x += xvel;
+		(*point).y += yvel;
 	}
 	void Borders()
 	{
-		if (point.x > WIDTH ) point.x = 0;
-		if (point.x < 0 ) point.x = WIDTH;
-		if (point.y > HEIGHT ) point.y = 0;
-		if (point.y < 0 ) point.y = HEIGHT;
+		if (point->x > WIDTH ) xvel = -xvel;
+		if (point->x < 0 ) xvel = -xvel;
+		if (point->y > HEIGHT ) yvel = -yvel;
+		if (point->y < 0 ) yvel = -yvel;
 
+	}
+	void Colisions (std::vector<SDL_FPoint> *points,int num)
+	{
+		for (int i = 0; i < points->size();i++)
+		{
+			if(i != num)
+			{
+				if ((*points)[i].x == point->x && (*points)[i].y == point->y)
+				{
+					xvel = -xvel * 0.8;
+					yvel = -yvel * 0.8;
+				}
+			}
+		}
 	}
 
 
@@ -68,17 +83,24 @@ int main()
     float fps = 0;
 	int frames = 0;
     std::vector<atom> atoms;
+	std::vector<SDL_FPoint> points;
 
-    for (int i = 0; i < 4   ; i++)
+    for (int i = 0; i < 1000   ; i++)
 	{
 		atom atom_obj;
-		atoms.push_back(atom_obj);
+		SDL_FPoint point_obj {200,200};
 
+		points.push_back(point_obj);
+		atoms.push_back(atom_obj);
+	}
+	for (int i = 0; i < points.size(); i++)
+	{
+		atoms[i].point = &points[i];
 	}
 	// animation loop
 	while (!close) 
 	{
-				// Events management
+		// Events management
 		
 		while (SDL_PollEvent(&event)) 
 		{
@@ -91,37 +113,33 @@ int main()
 					break;
 			}
 		}
+
 		// computing
+		
 		for (int i = 0; i < atoms.size(); i++)
 		{
         	atoms[i].Updating();
 			atoms[i].Borders();
+			atoms[i].Colisions(&points,i);
+			//std::cout << points[i].x << " : " << points[i].y << " > " << &points[i] << std::endl; //Debug
 		}
-        // Colisions
-		
-
         // Rendering
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 128);
-		for(int i = 0; i < atoms.size();i++)
-		{
-			SDL_RenderDrawPointF(renderer,atoms[i].point.x , atoms[i].point.y);	
-		}
+		SDL_RenderDrawPointsF(renderer,&points[0] ,points.size());	
 		
 		
-
 		//Updating window
         SDL_RenderPresent(renderer); 
-		
 		
 		
 		// calculates  fps
 		frames ++;
 		fps = frames / float(SDL_GetTicks() / 1000.0);
 		SDL_SetWindowTitle(window,std::to_string(fps).c_str());
-        SDL_Delay(fps / 15);
+		
 	}
 
 
