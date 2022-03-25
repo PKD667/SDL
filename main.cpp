@@ -17,47 +17,71 @@ constexpr T HEIGHT{ 600 };
 template<typename T>
 constexpr T TOTAL_POINTS{ 5000 };
 
+struct  Δ {
+    float i, j;
+};
+struct force {
+    Δ v;
+    SDL_Point application;
+};
+
+
 class thing {
     public:
-        SDL_FRect rect ;
-        float xvel;
-	    float yvel; 
+        SDL_FRect rect {0,0,50,50};
+        Δ vel {0,0};
+        Δ acceleration {0,0};
+        float ρ = 1; 
+        float mass = ρ * (rect.h * rect.w);
         thing ()
         {
 
         }
 	    void Updating() 
 	    {	
-            rect.x += xvel;
-		    rect.y += yvel;
-            std::cout << " [U] -> " << " x : " << rect.x << "  y : " << rect.y << std::endl;
+            vel.i += acceleration.i;
+            vel.j += acceleration.j;
+            rect.x += vel.i;
+		    rect.y += vel.j;
+            acceleration.i = 0;
+            acceleration.j = 0;
+            //std::cout << " [U] -> " << " x : " << rect.x << "  y : " << rect.y << std::endl;
 
 	    }
+        void Force(force F)
+        {
+          
+          acceleration.i +=  F.v.i / ( mass) ;
+          acceleration.j += F.v.j / ( mass) ;
+          std::cout <<  rect.y << " " << rect.x << "\n └─> " << acceleration.i << " " << acceleration.j << std::endl;
+        };
 	    void Borders()
 	    {
 		    if (rect.x + rect.w > WIDTH<int> ) 
             {
-                xvel = -xvel * 0.8;
+                vel.i = -vel.i * 0.8;
                 Updating();
             }
 		    if (rect.x <= 0 ) 
             {
-                xvel = -xvel * 0.8;
+                vel.i = -vel.i * 0.8;
                 Updating();
             }
 		    if (rect.y + rect.h > HEIGHT<int> )
             {
-                yvel = -yvel * 0.8;
+                vel.j = -vel.j * 0.8;
                 Updating();
             } 
 		    if (rect.y <= 0 )
             {
-                yvel = -yvel * 0.8;
+                vel.j = -vel.j * 0.8;
                 Updating();
             } 
             
 	    }
+
 };
+// F / m = A
 int main(int argc, char* argv[])
 {
      if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -82,14 +106,18 @@ int main(int argc, char* argv[])
     SDL_Rect CollRect{};
 
     std::vector<thing> things; //vector of things to be rendered
-    for (int i = 0; i < 10;i++) {
+    for (int i = 0; i < 2; i++) {
         std::srand(time(nullptr) + i);
         thing thing_object ;
+
         thing_object.rect.x = float(std::rand() % (WIDTH<int> - int(thing_object.rect.w)));
         thing_object.rect.y = float(std::rand() % (HEIGHT<int> - int(thing_object.rect.h))) ;
-        thing_object.xvel = 1;
-        thing_object.yvel = 1;
+        thing_object.vel.i = 1;
+        thing_object.vel.j = 1;
+
+        // Add hte object to the vector
         things.push_back(thing_object);
+        std::cout << things[i].rect.x << " " << things[i].rect.y << " - " << things[i].vel.i << " " << things[i].vel.j << std::endl;
         
     }
     
@@ -110,26 +138,20 @@ int main(int argc, char* argv[])
             
             things[i].Updating();
             things[i].Borders();
-            
-            for (int j = i + 1; j < things.size(); j++)
+
+            for (int j = i + 1; j < things.size() ; j++)
             {
-                SDL_Rect int_rect_i = {static_cast<int>(things[i].rect.x),static_cast<int>(things[i].rect.y),static_cast<int>(things[i].rect.w),static_cast<int>(things[i].rect.h)};
-                SDL_Rect int_rect_j = {static_cast<int>(things[j].rect.x),static_cast<int>(things[j].rect.y),static_cast<int>(things[j].rect.w),static_cast<int>(things[j].rect.h)};
-                if (SDL_HasIntersection(&int_rect_i, &int_rect_j))
+
+                SDL_Rect int_rect_i = {int(things[i].rect.x),int(things[i].rect.y),int(things[i].rect.w),int(things[i].rect.h)};
+                SDL_Rect int_rect_j = {int(things[j].rect.x),int(things[j].rect.y),int(things[j].rect.w),int(things[j].rect.h)};
+                if (SDL_IntersectRect(&int_rect_i, &int_rect_j,&CollRect))
                 {
-                    things[i].xvel = -things[i].xvel * 0.8;
-                    things[j].xvel = -things[j].xvel * 0.8;
-                    things[i].yvel = -things[i].yvel * 0.8;
-                    things[j].yvel = -things[j].yvel * 0.8;
+                    things[i].Force({{(things[j].mass * things[j].vel.i),(things[j].mass * things[j].vel.j)},0});
+                    things[j].Force({{(things[i].mass * things[i].vel.i),(things[i].mass * things[i].vel.j)},0});
                     things[i].Updating();
                     things[j].Updating();
-
-
                 }
-                
             }
-            
-
 
         }
 
@@ -138,9 +160,9 @@ int main(int argc, char* argv[])
 
         SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255); 
         for (int i = 0; i < things.size(); i++) {
+            //std::cout << things[i].rect.x << " " << things[i].rect.y << " - " << things[i].vel.i << " " << things[i].vel.j << std::endl;
             SDL_RenderFillRectF(pRenderer, &things[i].rect);
         }
-
         SDL_RenderPresent(pRenderer);  
 
         SDL_Delay(10);
