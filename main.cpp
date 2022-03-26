@@ -62,7 +62,7 @@ class thing {
                 vel.i = -vel.i * 0.8;
                 Updating();
             }
-		    if (rect.x <= 0 ) 
+		    if (rect.x <= 0 )  
             {
                 vel.i = -vel.i * 0.8;
                 Updating();
